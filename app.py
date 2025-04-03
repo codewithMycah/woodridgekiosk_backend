@@ -10,7 +10,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Connect to MongoDB Atlas
-atlas_connection_string = "mongodb+srv://db_admin:dQERttM5UIXM41cy@cluster0.ofqfm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+atlas_connection_string = "mongodb+srv://db_admin:XEnMjPDPcFWIbh8Q@cluster0.ofqfm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 client = MongoClient(atlas_connection_string)
 
 # Specify your database and collection
@@ -28,7 +28,18 @@ def get_businesses():
     
     return jsonify(businesses)
 
-@app.route('/image/<file_id>', methods=['GET'])
+@app.route('/api/business/<business_id>', methods=['GET'])
+def get_business(business_id):
+    
+    business = collection.find_one({"_id": ObjectId(business_id)})
+    if business:
+        business['_id'] = str(business['_id'])
+        business['image'] = str(business['image'])
+        return jsonify(business)
+    else:
+        return { 'error': 'Business not found'}
+
+@app.route('/api/image/<file_id>', methods=['GET'])
 def get_image(file_id):
     # Fetch the file by its ObjectId
     file = fs.get(ObjectId(file_id))
