@@ -4,6 +4,7 @@ from pymongo import MongoClient # PyMongo is the official MongoDB driver for Pyt
 from flask_cors import CORS  # To allow cross-origin requests from React frontend
 
 from bson import ObjectId # BSON, the binary representation of JSON, is primarily used internally by MongoDB for efficient storage and data traversal.
+from bson.errors import InvalidId # Error if item ID is wrong
 import gridfs # GridFS is a file storage system in MongoDB
 import io # Python io module allows us to manage the file-related input and output operations
 
@@ -35,14 +36,17 @@ def get_businesses() -> list:
 # Get specific business data based on business ID
 @app.route('/api/business/<business_id>', methods=['GET'])
 def get_business(business_id) -> list:
-    # .find_one - search data in mongodb based on _id
-    business = collection.find_one({"_id": ObjectId(business_id)})
-    if business:
-        business['_id'] = str(business['_id']) # Convert ObjectId to string
-        business['image'] = str(business['image']) # Convert ObjectId to string
-        return jsonify(business)
-    else:
-        return jsonify({ 'error': 'Business not found' })
+    try:
+        # .find_one - search data in mongodb based on _id
+        business = collection.find_one({"_id": ObjectId(business_id)})
+        if business:
+            business['_id'] = str(business['_id']) # Convert ObjectId to string
+            business['image'] = str(business['image']) # Convert ObjectId to string
+            return jsonify(business)
+        else:
+            return jsonify({ 'error': 'Business not found' }), 404
+    except InvalidId:
+        return jsonify({"error": "Invalid business ID format"}), 400
 
 # Get image
 @app.route('/api/image/<file_id>', methods=['GET'])
